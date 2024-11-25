@@ -6,158 +6,158 @@ on:
       - main
 
 jobs:
-#   tests:
-#     runs-on: ubuntu-latest
-#     # Блок services аналогичен docker-compose.yml
-#     services:
-#       postgres:
-#         image: postgres:13.10
-#         # Указываем имя тестовой базы, имя и пароль пользователя в открытом виде,
-#         # ведь эта база будет работать только во время прогона тестов
-#         env:
-#           POSTGRES_USER: django_user
-#           POSTGRES_PASSWORD: django_password
-#           POSTGRES_DB: django_db
-#         ports:
-#           - 5432:5432
-#         # Эта конструкция описывает проверку готовности сервиса postgres
-#         # Если её не будет, то тесты могут запуститься раньше, чем сервер PostgreSQL
-#         # В результате тесты опять решат, что базы нет, — и упадут
-#         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-#     steps:
-#     - uses: actions/checkout@v3
-#     - name: Set up Python
-#       uses: actions/setup-python@v4
-#       with:
-#         python-version: 3.9
-#     - name: Install dependencies
-#       run: |
-#         python -m pip install --upgrade pip 
-#         pip install flake8==6.0.0 flake8-isort==6.0.0
-#         pip install -r ./backend/requirements.txt 
-#     # Этот шаг дополним переменными для доступа к БД
-#     - name: Test with flake8 and django tests
-#       # Добавляем env-переменные для доступа к БД
-#       env:
-#         POSTGRES_USER: django_user
-#         POSTGRES_PASSWORD: django_password
-#         POSTGRES_DB: django_db
-#         # Сервер БД запущен в Docker, но его порт проброшен на хост
-#         # Поэтому подключаемся к 127.0.0.1:5432
-#         DB_HOST: 127.0.0.1
-#         DB_PORT: 5432
-#       run: |
-#         python -m flake8 backend/
-#         cd backend/
-#         python manage.py test
+  tests:
+    runs-on: ubuntu-latest
+    # Блок services аналогичен docker-compose.yml
+    services:
+      postgres:
+        image: postgres:13.10
+        # Указываем имя тестовой базы, имя и пароль пользователя в открытом виде,
+        # ведь эта база будет работать только во время прогона тестов
+        env:
+          POSTGRES_USER: django_user
+          POSTGRES_PASSWORD: django_password
+          POSTGRES_DB: django_db
+        ports:
+          - 5432:5432
+        # Эта конструкция описывает проверку готовности сервиса postgres
+        # Если её не будет, то тесты могут запуститься раньше, чем сервер PostgreSQL
+        # В результате тесты опять решат, что базы нет, — и упадут
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip 
+        pip install flake8==6.0.0 flake8-isort==6.0.0
+        pip install -r ./backend/requirements.txt 
+    # Этот шаг дополним переменными для доступа к БД
+    - name: Test with flake8 and django tests
+      # Добавляем env-переменные для доступа к БД
+      env:
+        POSTGRES_USER: django_user
+        POSTGRES_PASSWORD: django_password
+        POSTGRES_DB: django_db
+        # Сервер БД запущен в Docker, но его порт проброшен на хост
+        # Поэтому подключаемся к 127.0.0.1:5432
+        DB_HOST: 127.0.0.1
+        DB_PORT: 5432
+      run: |
+        python -m flake8 backend/
+        cd backend/
+        python manage.py test
 
-#   build_and_push_to_docker_hub:
-#     name: Push Docker image to DockerHub
-#     runs-on: ubuntu-latest
-#     needs: tests
-#     steps:
-#       - name: Check out the repo
-#         # Получение исходного кода из репозитория
-#         uses: actions/checkout@v3
-#       - name: Set up Docker Buildx
-#         # Установка сборщика контейнеров Docker
-#         uses: docker/setup-buildx-action@v2
-#       - name: Login to Docker 
-#         # Авторизация на Docker Hub
-#         uses: docker/login-action@v2
-#         # При помощи with передаём в action параметры username и password
-#         with:
-#           username: ${{ secrets.DOCKER_USERNAME }}
-#           password: ${{ secrets.DOCKER_PASSWORD }}
-#           # Хорошо ли держать логин и пароль прямо в коде workflow?
-#           # Нет, это нехорошо
-#       - name: Push to DockerHub
-#         # Одновременный билд и пуш образа в Docker Hub
-#         uses: docker/build-push-action@v4
-#         with:
-#           # Параметр context: ./backend/ указывает, что нужный Dockerfile 
-#           # находится в ./backend/
-#           context: ./backend/
-#           # Параметр push: true указывает, что образ нужно не только собрать,
-#           # но и отправить на Docker Hub
-#           push: true
-#           # В параметре tags задаётся название и тег для образа.
-#           # Для каждого пересобранного образа 
-#           # устанавливаем тег latest, чтобы потом
-#           # на сервере и в docker-compose.yml не указывать версию
-#           tags: xelerius/taski_backend:latest
+  build_and_push_to_docker_hub:
+    name: Push Docker image to DockerHub
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Check out the repo
+        # Получение исходного кода из репозитория
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        # Установка сборщика контейнеров Docker
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker 
+        # Авторизация на Docker Hub
+        uses: docker/login-action@v2
+        # При помощи with передаём в action параметры username и password
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          # Хорошо ли держать логин и пароль прямо в коде workflow?
+          # Нет, это нехорошо
+      - name: Push to DockerHub
+        # Одновременный билд и пуш образа в Docker Hub
+        uses: docker/build-push-action@v4
+        with:
+          # Параметр context: ./backend/ указывает, что нужный Dockerfile 
+          # находится в ./backend/
+          context: ./backend/
+          # Параметр push: true указывает, что образ нужно не только собрать,
+          # но и отправить на Docker Hub
+          push: true
+          # В параметре tags задаётся название и тег для образа.
+          # Для каждого пересобранного образа 
+          # устанавливаем тег latest, чтобы потом
+          # на сервере и в docker-compose.yml не указывать версию
+          tags: xelerius/taski_backend:latest
 
-#   frontend_tests:
-#     runs-on: ubuntu-latest
+  frontend_tests:
+    runs-on: ubuntu-latest
 
-#     steps:
-#     - uses: actions/checkout@v3
-#     - name: Set up nodeJS
-#       # Это готовый воркфлоу для установки Node.js на раннер
-#       uses: actions/setup-node@v3
-#       with:
-#         # Это параметр воркфлоу, указывающий нужную версию Node.js
-#         node-version: 18
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up nodeJS
+      # Это готовый воркфлоу для установки Node.js на раннер
+      uses: actions/setup-node@v3
+      with:
+        # Это параметр воркфлоу, указывающий нужную версию Node.js
+        node-version: 18
 
-#     - name: Install dependencies
-#       # Эта команда устанавливает зависимости для фронтенда
-#       run: |
-#         cd frontend/
-#         npm ci
+    - name: Install dependencies
+      # Эта команда устанавливает зависимости для фронтенда
+      run: |
+        cd frontend/
+        npm ci
 
-#     - name: Test frontend
-#       # Запускаем тесты
-#       run: |
-#         cd frontend/
-#         npm run test
-#   build_frontend_and_push_to_docker_hub:
-#     name: Push frontend Docker image to DockerHub
-#     runs-on: ubuntu-latest
-#     needs: frontend_tests
-#     steps:
-#       - name: Check out the repo
-#         uses: actions/checkout@v3
-#       - name: Set up Docker Buildx
-#         uses: docker/setup-buildx-action@v2
-#       - name: Login to Docker 
-#         uses: docker/login-action@v2
-#         with:
-#           username: ${{ secrets.DOCKER_USERNAME }}
-#           password: ${{ secrets.DOCKER_PASSWORD }}
-#       - name: Push to DockerHub
-#         uses: docker/build-push-action@v4
-#         with:
-#           context: ./frontend/
-#           push: true
-#           tags: xelerius/taski_frontend:latest
+    - name: Test frontend
+      # Запускаем тесты
+      run: |
+        cd frontend/
+        npm run test
+  build_frontend_and_push_to_docker_hub:
+    name: Push frontend Docker image to DockerHub
+    runs-on: ubuntu-latest
+    needs: frontend_tests
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker 
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Push to DockerHub
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend/
+          push: true
+          tags: xelerius/taski_frontend:latest
 
-#   build_gateway_and_push_to_docker_hub:
-#     name: Push gateway Docker image to DockerHub
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Check out the repo
-#         uses: actions/checkout@v3
-#       - name: Set up Docker Buildx
-#         uses: docker/setup-buildx-action@v2
-#       - name: Login to Docker 
-#         uses: docker/login-action@v2
-#         with:
-#           username: ${{ secrets.DOCKER_USERNAME }}
-#           password: ${{ secrets.DOCKER_PASSWORD }}
-#       - name: Push to DockerHub
-#         uses: docker/build-push-action@v4
-#         with:
-#           context: ./gateway/
-#           push: true
-#           # Тут вместо username должен быть ваш логин на Docker Hub
-#           tags: xelerius/taski_gateway:latest
+  build_gateway_and_push_to_docker_hub:
+    name: Push gateway Docker image to DockerHub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker 
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Push to DockerHub
+        uses: docker/build-push-action@v4
+        with:
+          context: ./gateway/
+          push: true
+          # Тут вместо username должен быть ваш логин на Docker Hub
+          tags: xelerius/taski_gateway:latest
   deploy:
     runs-on: ubuntu-latest
-    # needs: 
-    #   # Дождёмся билда всех образов Taski
-    #   - build_and_push_to_docker_hub
-    #   - build_frontend_and_push_to_docker_hub
-    #   - build_gateway_and_push_to_docker_hub
+    needs: 
+      # Дождёмся билда всех образов Taski
+      - build_and_push_to_docker_hub
+      - build_frontend_and_push_to_docker_hub
+      - build_gateway_and_push_to_docker_hub
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
@@ -166,10 +166,10 @@ jobs:
       uses: appleboy/scp-action@master
     # Передаём параметры для action appleboy/scp-action: 
       with:
-        host: 89.169.160.250
-        username: yc-user
-        key: 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
-        passphrase: JlOv3bJ-5z
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        passphrase: ${{ secrets.SSH_PASSPHRASE }}
         source: "docker-compose.production.yml"
         target: "taski"
     - name: Executing remote ssh commands to deploy
@@ -177,7 +177,7 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
-        key: b3BlbnNzaC1rZXktdjEAAAAACmFlczI1Ni1jdHIAAAAGYmNyeXB0AAAAGAAAABAWPrZuArFRqEyv6jNx25MZAAAAEAAAAAEAAAGXAAAAB3NzaC1yc2EAAAADAQABAAABgQDHXBTOPr6RT8whp5MEn+TuZ4xu5uIOe9ZIJ6crMo2fYjq0hpIu0NJYcp0TihbJWFaZQVTfcK6xfmxoqWNMoyK0rXrI/hqIIt8rZlKy3PA45QgGfU1qw+Nwmia5V+52QlpO9PN9N7v4SyKBYm97pe4xZXIDEs8Xotr8wSuJX67cuciJh0DLCIgqL8SyIIRdndFeaNVwCv7AV2K0Jypu09oP/vLbGvK0Yylj1ZO7BkLbT68SAWP6SCcwhBeQcSsIAW86FOZx34BHiKe5EcKmHkBZQWtjuM6aqX1jSMie3A3IkeUtjN2tnZAmNGg0D8FVVtljfX6+ea/Ce04vmoF4RCjuAICYkbw8y7AGLIjuxA1GSKRMj2ZGHmT/FQg261/Xe+M99jbiy8G3ZpdSHwlXuF9VJezPxm6SQ91s9GZA8d6B7sHl8nGYeHAfHK8jNUdmM95DZOUXm267Lr/tz0GTn+RuIwLEoCNpbCku9UpuYcjmRYugLqRiaCAbme0T+OWUr50AAAWgBk+PjaQ2l6J22lZaFZBZ26Uxzll9oN0hvoh9iTD+5SQNbxJ+1ZtMopOY3XV7KNXD865rpYm2LaiDTSYPuPa9jm+J14hIvUhBJMoNfYoO0PiOqHbGB1ADdZECDr72mIquYvFX3QmcpCcIOTHTROU0CRXsy2AlXiRaHZLhJajAVZBPDraasAFgNKD4pcMLZ4QSsKweb75Hc2Hn+GVorq6PjjkUUNM3Mueef2pl3H3AtHzNY6VGW/yNFCdmtCkd9jChZgZUKzMkf/sqmwxLk6lGRA6VDBjcXf2XCc5ql29gaW4iYZZ8+stmuEKp90p5feWrBA2gtXBHaGH1vOtUIY6uO3PucLqjFZVHBBrShJM8M+poxgBsft2URpWsjbTX000vPkJ8GjkJVIhHsj4Ls/9njqJiEvD6jxJCwszdPDGFyYFyqVevTnQuxQdjB0wnZ4aMtecHZflOd5HWHlTQgvXsT9xv3oxjepTfIiXERru6FBin09nVSW6kW1yP/UNXO2vQvvjERq7bQe/kBhR7oaY/u16QX97X9u3fJm67TOFqR08sw/hi6vhpZTWslfrttwM8s78MrvcKja9X2JwZzxvCwJeufdVb4WEvXbz7Burr8no/PshQ4zBVPP0Tap5R6z4Q5gvX0yH5/oaOxDpfOpdhEnbsdNxXsyX3wxVDVNS9jVMLcmD1ud+1MfeDq0AkJkLstIK8n45DZaJjhVsYe9KSMISfXoubak/Ybn1HN896Kg7y8SyX/3QwBFYqFwi91aAdxYtz/nFoA1uQItzWTsdUcRMnpbD6XzVhmomzea3fHupznSdNx0PlYSvmyCIaQsMosuqfg4CpRldAgOZSJypecsDGoxcciEj7jDBZUiz+8I2fwApNjFBVmpAN2MZTZDb0hYDCnln/CzauP17l1CxLHRbhSsy8EDrq+b88NDxlFuIoqTorLE2sKCTyHoVTdizAl5g/3ZlI2u0FdmhEZLiS0M3HFm5Q/vOyeaTDCaiR8ErCcWYPnb42qkTGjo+e+dNN/yCCPB66DPfeoKaNv6jZfMOtAHyU7IzjcCNELH4zzFwki3T+aFtL9MBw2rvshydeiIhonNC7RYnQom2YHQK/639VkFCCHwlWtSmRNlo1ye7+LYgBlHUrZjzibg4BeIa+7gHrPXROM5PmFQd5xaL2U5lDTT/wZdlNlop1lQUImyubCsBITqk+qI2BR3WBTk1usU9+qjUtjeKd41gPpeX0qs8UAJNQ2DWSL2wHKHmu8e3kSY+3T/c/tuKxEK3LPHaCAypB/yz/BXxzJvMV7FtYZOsXWYY3rCCF7Fc+gT8p8OrBnVhQUUO3Rz3wKnOri+dmMCLW7SdRz0UuQRNgb+ZxqF4SocWRlQisThKjLWtF9yYuSV1PoMIBA94IpWZeaa1OX1Odag8J2qZipRLko2PPgNUi42qhXnEmf0yn0l6EKlElt1WgzOWTJyeFWIPKByIpLuwNZnN1jNTobxGv1YInsZU44/B7i5SBY0HPk+c4IHgnx9PG8DKO7PZn2rwvcXV/hKA2O1Bfn1sDbKYdGXjKxzHKt5OhoTshrgDTXxIPQcSaHDUWSH5Ybc5COj4JWaJNYfvJffEXjseV32zG1xIkA3x++4SGb64AseoFGMf/PAzjyeQPY9/cgPz/xr6LeyNFNhdEPPn9D+UzA7bbQTIv2scAkkoZwmgntgv39iqTnCUxDxw1+f+C/FMSkTXFEkoFXeHM6fBrlY4914yrC6mWT0c8q74mbqy3HOC3Q9WalkymtDETPJQCQQZi0S/W2MQLlVMk+I2491B8y3uZizWAmRlCSZ3icH4qQePMH8hi2a0b/hJXOpOwZPmosxzFADWHlLB860InZV6B4JeiH4Cl2tWoMIUXvArrMSEn0RXqM9k2ZBhcFuWDY4al1x+09O/R
+        key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         # Параметр script передаёт в action appleboy/ssh-action команды,
         # которые нужно выполнить на сервере, 
