@@ -10,11 +10,7 @@ SECRET_KEY = (
 
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    ".localhost",
-    "89.169.160.250",
-    "127.0.0.1",
-]
+ALLOWED_HOSTS = ["yataski.zapto.org", ]
 
 
 # Application definition
